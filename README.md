@@ -11,24 +11,71 @@ This tool analyzes Java code files and provides detailed feedback on:
 - **Security** - Vulnerabilities, input validation, data exposure
 
 ## Example Output
+
+Here's an actual code review of the `ClaudeService.java` file from this project:
 ```
-File: UserService.java
+File: ClaudeService.java
 --------------------------------------------------------------------------------
 CODE QUALITY Issues
 
-MEDIUM Severity - Line 23
-Issue: Method too long (85 lines)
-Description: Consider breaking into smaller, focused methods
-Suggestion: Extract validation logic into separate method
+HIGH Severity - Line 18
+Issue: OkHttpClient instance should be injected as a Spring bean
+Description: Current approach creates a new client for each service instance and 
+doesn't allow for configuration externalization
+Suggestion: Create an @Bean in a configuration class and inject it via constructor
+
+MEDIUM Severity - Line 46-61
+Issue: String formatting with String.format() and text blocks could be more maintainable
+Description: Large prompt template embedded in code reduces maintainability
+Suggestion: Move prompt template to external resource file or configuration
 
 BUGS Issues
 
-HIGH Severity - Line 45
-Issue: Potential NullPointerException
-Description: userService.getUser() may return null
-Suggestion: Add null check before accessing user properties
+HIGH Severity - Line 96
+Issue: Response body can only be read once - potential NullPointerException
+Description: If response.body() is null, calling .string() will throw NPE
+Suggestion: Add null check: response.body() != null ? response.body().string() : ""
+
+MEDIUM Severity - Line 107-120
+Issue: JSON parsing assumes specific response structure
+Description: Code assumes content array exists and has at least one element with text field
+Suggestion: Add defensive programming with proper null/empty checks
+
+PERFORMANCE Issues
+
+MEDIUM Severity - Line 18-21
+Issue: OkHttpClient created per service instance
+Description: OkHttpClient is expensive to create and should be shared
+Suggestion: Use singleton pattern or Spring bean configuration
+
+SECURITY Issues
+
+HIGH Severity - Line 82
+Issue: API key logged in error scenarios
+Description: HTTP request headers containing API key might be logged in debug mode
+Suggestion: Ensure sensitive headers are excluded from logging
+
+MEDIUM Severity - Line 119
+Issue: Error messages may expose internal structure
+Description: Raw API responses logged on parsing failure could contain sensitive information
+Suggestion: Sanitize logged response data, avoid logging full response content
+
+Summary
+Critical Issues to Address:
+1. Fix response body null pointer risk
+2. Move OkHttpClient to Spring bean configuration
+3. Add proper input validation
+4. Improve error handling consistency
+5. Secure API key handling and logging
 --------------------------------------------------------------------------------
 ```
+
+The tool provides actionable feedback with:
+- **Specific line numbers** for each issue
+- **Severity levels** (HIGH, MEDIUM, LOW)
+- **Clear descriptions** of what's wrong
+- **Concrete suggestions** for fixes
+- **Summary** of critical issues to prioritize
 
 ## Tech Stack
 
